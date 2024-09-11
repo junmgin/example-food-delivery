@@ -110,6 +110,7 @@
 
 
 # 분석/설계
+![image](https://github.com/user-attachments/assets/53dabcce-2744-498d-ab82-a7122f8c9df3)
 
 
 ## AS-IS 조직 (Horizontally-Aligned)
