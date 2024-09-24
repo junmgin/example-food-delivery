@@ -178,8 +178,34 @@ data-my-mysql-0   Bound    pvc-feef8c71-3df3-4976-8564-877b3c4c8367   8Gi       
 ## 셀프힐링
 - Kubernetes는 파드(Pod)가 비정상적으로 종료되거나 에러가 발생했을 때 자동으로 재시작하거나 복구하는 셀프힐링 기능을 제공합니다. 이 기능은 디플로이먼트(Deployment)나 스테이트풀셋(StatefulSet) 리소스에서 자동으로 제공됩니다.
 
-- 
-  
+```
+gitpod /workspace/apt-as/registration/kubernetes (main) $ kubectl get svc
+NAME                TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)          AGE
+contractor          ClusterIP      10.0.37.228    <none>          8080/TCP         3h13m
+gateway             LoadBalancer   10.0.217.227   4.230.145.38    8080:30818/TCP   3h11m
+kubernetes          ClusterIP      10.0.0.1       <none>          443/TCP          7h12m
+management          ClusterIP      10.0.245.0     <none>          8080/TCP         3h14m
+my-mysql            ClusterIP      10.0.154.239   <none>          3306/TCP         65m
+my-mysql-headless   ClusterIP      None           <none>          3306/TCP         65m
+mypage              ClusterIP      10.0.222.124   <none>          8080/TCP         3h14m
+registration        LoadBalancer   10.0.152.88    4.230.148.213   8080:30285/TCP   3h14m
+
+# 헬스 체크 요청: 애플리케이션의 상태를 확인하는 요청
+- http 4.230.148.213:8080/actuator/health
+{
+  "status": "UP"
+}
+정상 작동 중일 경우
+
+애플리케이션의 상태를 DOWN으로 설정
+
+http put 4.230.148.213:8080/actuator/down
+{
+  "status": "DOWN"
+}
+
+```
+
 ## 서비스 메쉬 응용 
 - 서비스 메쉬는 마이크로서비스들 간의 통신을 관리하는 데 도움을 주는 인프라 계층입니다. 대표적인 서비스 메쉬 솔루션으로는 Istio, Linkerd 등이 있으며, 서비스 간의 트래픽 제어, 로깅, 모니터링, 보안을 자동화합니다.
 
