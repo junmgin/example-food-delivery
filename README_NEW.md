@@ -1,5 +1,8 @@
 # 예제 - 아파트 하자 접수 관리 시스템
 
+- 개요
+본 보고서는 아파트 입주민들의 편의성 증대와 하자 처리 효율성 향상을 목표로 개발된 '아파트 하자 접수 관리 시스템' 구축 프로젝트에 대한 내용을 담고 있습니다. 시스템의 주요 기능, 설계 및 구현 방식, 운영 전략 등을 상세히 기술하여 시스템의 전반적인 이해를 돕고자 합니다.
+
 # 서비스 시나리오
 
 기능적 요구사항
@@ -85,6 +88,8 @@ Gateway에 application.yaml 설정 화면
 ## 분산 데이터 프로젝션 - CQRS
 - CQRS(Command Query Responsibility Segregation) 패턴은 데이터의 쓰기(명령)와 읽기(쿼리)를 분리하여 관리하는 방식입니다. 이를 통해 각 기능에 최적화된 데이터 모델을 사용할 수 있습니다.
 
+하자 접수 시에는 DefectRegistrationCommand 모델을 사용하고, 하자 조회 시에는 DefectRegistrationQuery 모델을 사용합니다.
+
 ![image](https://github.com/user-attachments/assets/7bc8c4a9-5d98-4e1f-8b1e-cb0b43bd8e9a)
 
 
@@ -97,6 +102,9 @@ Gateway에 application.yaml 설정 화면
 
 - cloude에 배포 완료
 - ![image](https://github.com/user-attachments/assets/ee8e18e4-1276-476e-89ba-c1769eaac843)
+
+- CI/CD 설정 - Jenkins 활용
+각 마이크로서비스 (하자 접수, 관리, 업체 등)는 독립적인 소스 저장소를 가지고 있으며, Jenkins를 활용하여 CI/CD 파이프라인을 구축하였습니다. Jenkins는 각 서비스의 빌드, 테스트, 배포 과정을 자동화하여 개발 생산성과 안정성을 향상시킵니다.
 
 ## 컨테이너 자동확장 - HPA 
 - HPA는 Kubernetes에서 파드(Pod)의 수를 자동으로 조정하는 기능입니다. CPU 사용률, 메모리 사용률 등 리소스 사용량을 기준으로 파드 수를 증가시키거나 감소시켜 애플리케이션이 요구에 맞게 확장되거나 축소되도록 합니다.
@@ -207,14 +215,47 @@ http put 4.230.148.213:8080/actuator/down
 ```
 
 ## 서비스 메쉬 응용 
-- 서비스 메쉬는 마이크로서비스들 간의 통신을 관리하는 데 도움을 주는 인프라 계층입니다. 대표적인 서비스 메쉬 솔루션으로는 Istio, Linkerd 등이 있으며, 서비스 간의 트래픽 제어, 로깅, 모니터링, 보안을 자동화합니다.
+- 서비스 메쉬(Service Mesh)는 마이크로서비스 아키텍처에서 서비스 간 통신을 관리하고 제어하는 데 사용되는 인프라스트럭처 레이어입니다. 마이크로서비스들이 서로 복잡하게 연결되어 통신하는 모습이 마치 그물망(mesh)과 같다고 하여 서비스 메쉬라고 불립니다.
 
-1. Istio
-   ```
-   
-   ```
- Istio 애플리케이션 배포
+1. istio
+ 서비스 메쉬를 구현하기 위해 Istio에 사이드카 패턴을 사용하여 서비스 간 통신을 가로채고 제어하며, 다양한 기능을 제공하여 개발자와 운영자가 마이크로서비스를 효율적으로 관리할 수 있도록 지원합니다.
 
- 
+ 2. Jaeger
+분산 추적 시스템: 마이크로서비스 아키텍처에서는 여러 서비스를 거쳐 요청이 처리되기 때문에, 문제 발생 시 어떤 서비스에서 문제가 발생했는지 파악하기 어려울 수 있습니다.
+
+3.  Kiali
+서비스 메쉬 관측 도구: Istio 서비스 메쉬의 구성 요소 및 서비스 간의 관계를 시각적으로 표현하고 모니터링하는 도구입니다.
+
+```
+정상 설치 후, ServiceType을 ClusterIP에서 LoadBalancer로 변경 후 EXTERNAL-IP 를 통해 접속
+
+NAME                   TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)                                                                      AGE
+grafana                ClusterIP      10.0.235.226   <none>           3000/TCP                                                                     65m
+istio-egressgateway    ClusterIP      10.0.156.245   <none>           80/TCP,443/TCP                                                               11h
+istio-ingressgateway   LoadBalancer   10.0.134.178   20.249.67.72     15021:31128/TCP,80:31019/TCP,443:31989/TCP,31400:30459/TCP,15443:30196/TCP   11h
+istiod                 ClusterIP      10.0.157.204   <none>           15010/TCP,15012/TCP,443/TCP,15014/TCP                                        11h
+jaeger-collector       ClusterIP      10.0.193.135   <none>           14268/TCP,14250/TCP,9411/TCP,4317/TCP,4318/TCP                               65m
+kiali                  LoadBalancer   10.0.215.168   20.249.180.141   20001:30643/TCP,9090:32071/TCP                                               65m
+loki                   ClusterIP      10.0.178.13    <none>           3100/TCP,9095/TCP                                                            65m
+loki-headless          ClusterIP      None           <none>           3100/TCP                                                                     65m
+loki-memberlist        ClusterIP      None           <none>           7946/TCP                                                                     65m
+prometheus             ClusterIP      10.0.185.66    <none>           9090/TCP                                                                     65m
+tracing                LoadBalancer   10.0.80.72     20.249.127.89    80:32111/TCP,16685:31554/TCP                                                 65m
+zipkin                 ClusterIP      10.0.102.76    <none>           9411/TCP 
+```
+
+```
+해당 명령어를 통해 파일에 정의된 Deployment에 Istio 사이드카가 주입되어, 해당 서비스에 Istio의 다양한 기능(트래픽 관리, 보안, 관측성 등)을 적용할 수 있게 됩니다.
+kubectl apply -f <(istioctl kube-inject -f kubernetes/deployment.yaml)
+
+Istio 사이드카가 정상적으로 주입된걸 확인
+kubectl get pods
+NAME                                      READY   STATUS    RESTARTS   AGE
+registration-645f9449bf-k8rth             2/2     Running   3          8m3s
+```
+
 ## 통합 모니터링 - monitoring
 - Kubernetes 클러스터와 애플리케이션의 상태를 모니터링하기 위해 Grafana 모니터링 도구를 사용합니다. Grafana는 시각화 대시보드를 제공합니다.
+  
+![image](https://github.com/user-attachments/assets/f4e93331-64d0-4854-bbe6-6582cedaf500)
+
